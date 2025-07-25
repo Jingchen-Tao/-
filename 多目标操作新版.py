@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import serial
 import time
-
+#正确版发过视频的版本
 """
 Multi‑target pick‑and‑place demo (v2)
 -------------------------------------
@@ -13,9 +13,9 @@ Multi‑target pick‑and‑place demo (v2)
 """
 
 # ────────────── USER‑TUNABLE SETTINGS ──────────────
-TARGET_COUNT = 7           # 同时处理的目标数量
+TARGET_COUNT = 3           # 同时处理的目标数量
 AUTO_RETURN_HOME = True    # 全部完成后是否自动回到原点
-FRAME_WAIT = 10            # 发送 XY 指令后等待时间 (s)
+FRAME_WAIT = 5            # 发送 XY 指令后等待时间 (s)
 
 # ROI
 X_START, X_END = 209, 538
@@ -30,8 +30,8 @@ REFLECTION_LOWER = np.array([0, 0, 230])
 REFLECTION_UPPER = np.array([180, 50, 255])
 
 # 标定参数
-PIXEL_ORIGIN = np.array([250, 53])  # 手臂当前像素参考点
-PIXEL_TO_MM = 1              # mm/px
+PIXEL_ORIGIN = np.array([214, 35])  # 手臂当前像素坐标
+PIXEL_TO_MM = 1.1              # mm/px
 
 # 步进换算
 X_STEPS_PER_MM = 50
@@ -124,3 +124,77 @@ finally:
     cap.release()
     arduino.close()
     print("资源已释放，程序结束。")
+
+    """
+
+    #include <AccelStepper.h>
+    #include <Stepper.h>
+
+    // 插补步长配置
+    const float steps_per_mm = 49.75;
+
+    // Z轴配置
+    const int Z_STEPS_PER_REV = 1000;  // 可调
+    const int Z_PIN1 = 38;
+    const int Z_PIN2 = 40;
+
+    // 步进电机对象
+    AccelStepper stepperX(AccelStepper::DRIVER, 30, 31);
+    AccelStepper stepperY(AccelStepper::DRIVER, 39, 41);
+    Stepper stepperZ(Z_STEPS_PER_REV, Z_PIN1, Z_PIN2);  // Z轴使用普通 Stepper 控制
+
+    void setup() {
+      Serial.begin(115200);
+      Serial.println("Ready for Industrial Insert Control with Z");
+
+      stepperX.setMaxSpeed(10000);
+      stepperY.setMaxSpeed(10000);
+      stepperX.setAcceleration(700);
+      stepperY.setAcceleration(20000);
+
+      stepperZ.setSpeed(100000);  // Z 轴速度可调
+    }
+
+    void loop() {
+      if (Serial.available()) {
+        String command = Serial.readStringUntil('\n');
+        command.trim();
+
+        // 插补命令格式
+        if (command.startsWith("x")) {
+          long x_steps = 0, y_steps = 0;
+          int result = sscanf(command.c_str(), "x%ldy%ld", &x_steps, &y_steps);
+          if (result == 2) {
+            Serial.print("Moving X: "); Serial.print(x_steps);
+            Serial.print(" steps, Y: "); Serial.println(y_steps);
+
+            stepperX.move(x_steps);
+            stepperY.move(y_steps);
+            while (stepperX.distanceToGo() != 0 || stepperY.distanceToGo() != 0) {
+              stepperX.run();
+              stepperY.run();
+            }
+            Serial.println("XY Move done.");
+          } else {
+            Serial.println("Invalid format for XY.");
+          }
+
+        // Z轴下降命令（'l'）
+        } else if (command == "l") {
+          Serial.println("Z轴下降");
+          stepperZ.step(-1000);  // 你可以根据实际情况调整步数
+        }
+
+        // Z轴上升命令（'r'）
+        else if (command == "r") {
+          Serial.println("Z轴上升");
+          stepperZ.step(1000);
+        }
+
+        else {
+          Serial.println("Unknown command.");
+        }
+      }
+    }
+
+    """

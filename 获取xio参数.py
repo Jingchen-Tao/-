@@ -3,8 +3,8 @@ import numpy as np
 
 # 你的裁剪参数（之前测量的）
 # ROI裁剪参数
-x_start = 209
-x_end = 538
+x_start = 170
+x_end = 510
 y_start = 0
 y_end = 545
 

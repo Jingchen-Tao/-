@@ -2,8 +2,8 @@ import serial
 import time
 
 # 步长换算
-x_steps_per_mm = 50
-y_steps_per_mm = 50
+x_steps_per_mm = -50
+y_steps_per_mm = 0
 
 
 # 目标位移 (100mm)

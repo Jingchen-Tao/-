@@ -20,8 +20,8 @@ reflection_upper = np.array([180, 50, 255])
 kernel = np.ones((3, 3), np.uint8)
 
 pixel_to_mm_ratio = 0.8  # ≈0.1754 mm/px
-x_steps_per_mm = 50
-y_steps_per_mm = 50
+x_steps_per_mm = 0
+y_steps_per_mm = 100
 
 pixel_origin_x = 236
 pixel_origin_y = 61
